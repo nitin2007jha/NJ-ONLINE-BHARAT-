@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>NJ ONLINE BHARAT – ₹1 Upgrade Test</title>
+<title>NJ ONLINE BHARAT – ₹1 Upgrade</title>
 <style>
   :root{--bg:#eef3f1;--card:#fff;--ink:#14231f;--muted:#5d6f69;--line:#d3dfdb;--brand:#0b6e4f;--brand-ink:#fff;--ok:#0b6e4f;--err:#b3261e;--warn:#8a5a00}
   @media (prefers-color-scheme:dark){:root{--bg:#0f1a17;--card:#16251f;--ink:#e6f1ed;--muted:#8fa59d;--line:#27403a;--brand:#3ecf9a;--brand-ink:#06251a;--ok:#3ecf9a;--err:#ff8a80;--warn:#ffcc66}}
@@ -16,42 +16,35 @@
   .price{font-size:2.6rem;font-weight:700;letter-spacing:-.02em;margin:12px 0 4px}
   .price small{font-size:1rem;font-weight:500;color:var(--muted)}
   ul{padding-left:18px;margin:12px 0 18px}
-  button,input{font:inherit}
-  button{cursor:pointer;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--ink);padding:10px 14px}
+  button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--ink);padding:10px 14px}
   button.primary{width:100%;background:var(--brand);color:var(--brand-ink);border-color:var(--brand);font-weight:600;padding:14px}
   button:disabled{opacity:.6;cursor:not-allowed}
-  button:focus-visible,input:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
-  label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:6px}
-  input{width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);margin-bottom:10px}
+  button:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
   .status{border-radius:10px;padding:12px 14px;border:1px solid var(--line);margin-bottom:12px}
   .status.ok{color:var(--ok);border-color:var(--ok)} .status.err{color:var(--err);border-color:var(--err)} .status.wait{color:var(--warn);border-color:var(--warn)}
   dl{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:0 0 14px;font-size:.92rem}
   dt{color:var(--muted)} dd{margin:0;word-break:break-all;font-family:ui-monospace,Menlo,monospace}
-  pre{margin:0;max-height:180px;overflow:auto;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;font-size:.78rem;white-space:pre-wrap;word-break:break-word}
+  h2{font-size:1rem;margin:0 0 8px}
+  .hook{font-size:.82rem;font-family:ui-monospace,Menlo,monospace;border-top:1px solid var(--line);padding:8px 0;word-break:break-all}
+  .hook b.ok{color:var(--ok)} .hook b.err{color:var(--err)}
   .hide{display:none}
 </style>
 </head>
 <body>
 <main>
 
-  <!-- VIEW 1: Upgrade -->
   <section class="card" id="vUpgrade">
     <h1>Pro plan</h1>
-    <div class="muted">NJ ONLINE BHARAT · UPI gateway test</div>
+    <div class="muted">NJ ONLINE BHARAT</div>
     <div class="price">₹1 <small>/ test payment</small></div>
     <ul>
       <li>Hosted UPI checkout (UPI apps, QR, Collect)</li>
       <li>Payment ke baad UTR verify hota hai</li>
     </ul>
-
-    <label for="backend">Backend URL</label>
-    <input id="backend" type="url" placeholder="https://your-backend.example.com" autocomplete="off">
-
     <button class="primary" id="upgrade">Upgrade ₹1</button>
     <div id="err" class="status err hide" style="margin:12px 0 0"></div>
   </section>
 
-  <!-- VIEW 2: Confirmation (gateway redirects here with ?sessionId=...) -->
   <section class="card hide" id="vConfirm" aria-live="polite">
     <h1>Payment status</h1>
     <div id="cStatus" class="status wait">Verify ho raha hai…</div>
@@ -60,76 +53,71 @@
   </section>
 
   <section class="card">
-    <label>Debug log</label>
-    <pre id="log">—</pre>
+    <h2>Webhook log</h2>
+    <div class="muted" id="hookEmpty">Abhi koi webhook nahi aaya.</div>
+    <div id="hooks"></div>
   </section>
 </main>
 
 <script>
-const AMOUNT_INR = 1;
-const DEFAULT_BACKEND = "";            // yahan apna deployed backend URL daal sakte ho (ya page me paste karo)
-
 const $ = id => document.getElementById(id);
 const q = new URLSearchParams(location.search);
-const pageUrl = location.origin + location.pathname;   // gateway yahin wapas bhejega
 
-function log(m, d){
-  const l = `[${new Date().toLocaleTimeString()}] ${m}` + (d ? " " + JSON.stringify(d) : "");
-  $("log").textContent = $("log").textContent === "—" ? l : $("log").textContent + "\n" + l;
-}
-function store(k, v){ try{ if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k, v); }catch(e){ return null; } }
-const backend = () => ($("backend").value.trim() || DEFAULT_BACKEND).replace(/\/+$/, "");
-
-$("backend").value = store("upi_backend") || DEFAULT_BACKEND;
-
-/* ---------------- Upgrade click ---------------- */
+/* ---------- Upgrade ---------- */
 $("upgrade").onclick = async () => {
-  const b = backend(), err = $("err");
-  err.classList.add("hide");
-  if(!b){ err.textContent = "Pehle backend URL daalo."; err.classList.remove("hide"); return; }
-  store("upi_backend", b);
-  $("upgrade").disabled = true;
-  const orderId = "ORD-" + Date.now();
+  const err = $("err"); err.classList.add("hide"); $("upgrade").disabled = true;
   try{
-    log("create-payment →", {orderId, amountInr: AMOUNT_INR});
-    const r = await fetch(b + "/api/create-payment", {
-      method: "POST", headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({orderId, amountInr: AMOUNT_INR, description: "Pro Plan Upgrade", callbackUrl: pageUrl})
-    });
+    const r = await fetch("/api/create-payment", {method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({orderId: "ORD-" + Date.now()})});
     const d = await r.json();
-    log("response", d);
-    if(!r.ok || !d.checkoutUrl) throw new Error(d.error || d.message || ("HTTP " + r.status));
-    store("upi_last_session", d.sessionId);
-    location.href = d.checkoutUrl;           // hosted UPI checkout
+    if(!r.ok || !d.checkoutUrl) throw new Error(d.error ? d.error + (d.details ? " " + JSON.stringify(d.details) : "") : "HTTP " + r.status);
+    try{ sessionStorage.setItem("upi_session", d.sessionId); }catch(e){}
+    location.href = d.checkoutUrl;                     // gateway ka hosted UPI page
   }catch(e){
-    err.textContent = "Payment start nahi hua: " + e.message;
-    err.classList.remove("hide");
+    err.textContent = "Payment start nahi hua: " + e.message; err.classList.remove("hide");
     $("upgrade").disabled = false;
   }
 };
 
-/* ---------------- Confirmation view ---------------- */
+/* ---------- Confirmation (gateway yahin wapas bhejta hai) ---------- */
 function row(k, v){ if(!v) return; const dt = document.createElement("dt"), dd = document.createElement("dd");
   dt.textContent = k; dd.textContent = v; $("cInfo").append(dt, dd); }
 
 async function verify(){
   $("vUpgrade").classList.add("hide"); $("vConfirm").classList.remove("hide");
-  const sessionId = q.get("sessionId") || store("upi_last_session");
-  const b = backend();
-  log("callback params", Object.fromEntries(q));
-  row("Order", q.get("orderId")); row("Amount", q.get("amountInr") && "₹" + q.get("amountInr"));
-  if(!sessionId || !b){ $("cStatus").className = "status err"; $("cStatus").textContent = "Session ID ya backend URL missing."; return; }
+  let sessionId = q.get("sessionId"); try{ sessionId = sessionId || sessionStorage.getItem("upi_session"); }catch(e){}
+  const st = $("cStatus"); $("cInfo").innerHTML = "";
+  if(!sessionId){ st.className = "status err"; st.textContent = "Session ID nahi mila."; return; }
   try{
-    const r = await fetch(b + "/api/session/" + encodeURIComponent(sessionId));
-    const d = await r.json(); log("session", d);
+    const d = await (await fetch("/api/session/" + encodeURIComponent(sessionId))).json();
     const s = d.session || {};
-    if(s.status === "CONFIRMED"){ $("cStatus").className = "status ok"; $("cStatus").textContent = "Payment ho gaya ✓ Pro plan active."; row("UTR", s.utr || q.get("utr")); }
-    else if(s.status === "FAILED"){ $("cStatus").className = "status err"; $("cStatus").textContent = "Payment fail hua."; }
-    else { $("cStatus").className = "status wait"; $("cStatus").textContent = "Abhi pending (" + (s.status || "unknown") + "). 5 sec me dobara check…"; setTimeout(verify, 5000); $("cInfo").innerHTML = ""; }
+    row("Order", s.orderId || q.get("orderId")); row("Amount", "₹" + (s.amountInr ?? q.get("amountInr")));
     row("Session", sessionId);
-  }catch(e){ $("cStatus").className = "status err"; $("cStatus").textContent = "Verify error: " + e.message; }
+    if(s.status === "CONFIRMED"){
+      st.className = "status ok"; st.textContent = "Payment ho gaya ✓ Pro plan active.";
+      row("UTR", s.utr || q.get("utr"));
+      row("Webhook", d.webhook ? "mila ✓ (UTR " + d.webhook.utr + ")" : "abhi nahi aaya");
+    }else if(s.status === "FAILED"){ st.className = "status err"; st.textContent = "Payment fail hua."; }
+    else{ st.className = "status wait"; st.textContent = "Pending (" + (s.status || "unknown") + "). 5 sec me dobara check…"; setTimeout(verify, 5000); }
+  }catch(e){ st.className = "status err"; st.textContent = "Verify error: " + e.message; }
 }
-$("again").onclick = () => location.href = pageUrl;
+$("again").onclick = () => location.href = "/";
+
+/* ---------- Webhook log ---------- */
+async function loadHooks(){
+  try{
+    const {hooks} = await (await fetch("/api/webhook-log")).json();
+    $("hookEmpty").classList.toggle("hide", hooks.length > 0);
+    $("hooks").replaceChildren(...hooks.map(h => {
+      const d = document.createElement("div"); d.className = "hook";
+      const b = document.createElement("b"); b.className = h.valid ? "ok" : "err"; b.textContent = h.valid ? "VALID" : "REJECTED";
+      d.append(b, " " + new Date(h.at).toLocaleTimeString() + " · " + (h.event || "?") + " · " + (h.orderId || "-") +
+        (h.utr ? " · UTR " + h.utr : "") + (h.reason ? " · " + h.reason : ""));
+      return d;
+    }));
+  }catch(e){}
+}
+loadHooks(); setInterval(loadHooks, 5000);
 
 if(q.get("sessionId") || q.get("status")) verify();
 </script>
