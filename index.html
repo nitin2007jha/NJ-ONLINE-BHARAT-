@@ -75,7 +75,10 @@ const CONFIG = {
   gatewayUrl: "https://upi-gateway-306595059779.us-west1.run.app",
   // ⚠ TEST ONLY: static GitHub Pages site me key browser me visible hoti hai.
   // Test ke baad gateway dashboard se "New Keys" karke key rotate kar do.
-  apiKey: "upi_live_569cddb208953d90",
+  apiKey: "upi_live_d2324b27a2685e96",   // direct mode only (functionBase khali ho to)
+  // Firebase Cloud Function ka base URL daalo (webhook + secure mode). Example:
+  // "https://us-central1-YOUR-PROJECT.cloudfunctions.net"
+  functionBase: "",
   productName: "UPI Payments Mini Guide",
   amountInr: 1
 };
@@ -103,25 +106,28 @@ async function startPayment(){
   $("shopMsg").innerHTML = "";
   const orderId = "ORD-" + Date.now();
   try{
-    const res = await fetch(CONFIG.gatewayUrl + "/api/v1/checkout/sessions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + CONFIG.apiKey
-      },
-      body: JSON.stringify({
-        orderId,
-        amountInr: CONFIG.amountInr,
-        description: CONFIG.productName,
-        callbackUrl: CALLBACK_URL,
-        webhookUrl: CONFIG.gatewayUrl + "/api/demo-app/webhook"
-      })
-    });
+    let res;
+    if(CONFIG.functionBase){          // SECURE MODE: key backend me, webhook active
+      res = await fetch(CONFIG.functionBase + "/createPayment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId, amountInr: CONFIG.amountInr, description: CONFIG.productName, callbackUrl: CALLBACK_URL })
+      });
+    }else{                            // DIRECT MODE (sirf test)
+      res = await fetch(CONFIG.gatewayUrl + "/api/v1/checkout/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + CONFIG.apiKey },
+        body: JSON.stringify({
+          orderId, amountInr: CONFIG.amountInr, description: CONFIG.productName,
+          callbackUrl: CALLBACK_URL, webhookUrl: CONFIG.gatewayUrl + "/api/demo-app/webhook"
+        })
+      });
+    }
     const data = await res.json().catch(() => ({}));
     if(!res.ok || !data.checkoutUrl){
       throw new Error("Gateway error " + res.status + ": " + (data.error || data.message || JSON.stringify(data)));
     }
-    saveOrder({ orderId, sessionId: data.session && data.session.id, amountInr: CONFIG.amountInr, createdAt: Date.now() });
+    saveOrder({ orderId, sessionId: data.sessionId || (data.session && data.session.id), amountInr: CONFIG.amountInr, createdAt: Date.now() });
     location.href = data.checkoutUrl;   // hosted UPI checkout
   }catch(err){
     btn.disabled = false; btn.textContent = "Buy Now – Pay ₹1 via UPI";
@@ -134,9 +140,14 @@ async function startPayment(){
 
 /* ================= STEP 2: VERIFY ON RETURN ================= */
 async function verifyPayment(sessionId, orderId){
-  const res = await fetch(CONFIG.gatewayUrl + "/api/v1/checkout/sessions/" + encodeURIComponent(sessionId), {
-    headers: { "Authorization": "Bearer " + CONFIG.apiKey }
-  });
+  let res;
+  if(CONFIG.functionBase){
+    res = await fetch(CONFIG.functionBase + "/orderStatus?sessionId=" + encodeURIComponent(sessionId));
+  }else{
+    res = await fetch(CONFIG.gatewayUrl + "/api/v1/checkout/sessions/" + encodeURIComponent(sessionId), {
+      headers: { "Authorization": "Bearer " + CONFIG.apiKey }
+    });
+  }
   const data = await res.json().catch(() => ({}));
   if(!res.ok) throw new Error("Verify failed " + res.status);
   const s = data.session || {};
