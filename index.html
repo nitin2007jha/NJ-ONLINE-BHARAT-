@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UPI Gateway Test – ₹1 Upgrade</title>
+<style>
+  :root{
+    --bg:#eef3f1; --card:#ffffff; --ink:#14231f; --muted:#5d6f69;
+    --line:#d3dfdb; --brand:#0b6e4f; --brand-ink:#ffffff;
+    --ok:#0b6e4f; --err:#b3261e; --warn:#8a5a00;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{--bg:#0f1a17; --card:#16251f; --ink:#e6f1ed; --muted:#8fa59d; --line:#27403a; --brand:#3ecf9a; --brand-ink:#06251a; --ok:#3ecf9a; --err:#ff8a80; --warn:#ffcc66;}
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100vh;display:flex;justify-content:center;padding:24px 16px}
+  main{width:100%;max-width:440px;display:grid;gap:16px;align-content:start}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+  h1{font-size:1.25rem;margin:0 0 4px}
+  .muted{color:var(--muted);font-size:.9rem}
+  .price{font-size:2.6rem;font-weight:700;letter-spacing:-.02em;margin:12px 0 4px}
+  .price small{font-size:1rem;font-weight:500;color:var(--muted)}
+  ul{padding-left:18px;margin:12px 0 18px}
+  button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--ink);padding:10px 14px}
+  button.primary{width:100%;background:var(--brand);color:var(--brand-ink);border-color:var(--brand);font-weight:600;padding:14px}
+  button:disabled{opacity:.6;cursor:not-allowed}
+  button:focus-visible,select:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+  label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:6px}
+  select{width:100%;font:inherit;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);margin-bottom:14px}
+  .status{border-radius:10px;padding:12px 14px;font-size:.95rem;border:1px solid var(--line)}
+  .status.ok{color:var(--ok);border-color:var(--ok)}
+  .status.err{color:var(--err);border-color:var(--err)}
+  .status.wait{color:var(--warn);border-color:var(--warn)}
+  #pay{display:none;gap:12px}
+  #pay.show{display:grid}
+  #qr{justify-self:center;max-width:220px;width:100%;border-radius:8px;border:1px solid var(--line);background:#fff}
+  .row{display:flex;gap:8px}
+  .row>*{flex:1}
+  pre{margin:0;max-height:200px;overflow:auto;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;font-size:.78rem;white-space:pre-wrap;word-break:break-word}
+  @media (prefers-reduced-motion:no-preference){ .status{transition:color .2s,border-color .2s} }
+</style>
+</head>
+<body>
+<main>
+
+  <section class="card" aria-labelledby="t">
+    <h1 id="t">Pro plan</h1>
+    <div class="muted">UPI gateway test ke liye</div>
+    <div class="price">₹1 <small>/ test payment</small></div>
+    <ul>
+      <li>Real UPI payment flow check karo</li>
+      <li>Order → Pay → Status verify</li>
+    </ul>
+
+    <label for="gw">Gateway</label>
+    <select id="gw"></select>
+
+    <button class="primary" id="upgrade">Upgrade ₹1</button>
+  </section>
+
+  <section class="card" id="pay" aria-live="polite">
+    <div id="status" class="status wait">Order bana rahe hain…</div>
+    <img id="qr" alt="UPI QR" hidden>
+    <div class="row">
+      <button id="open" hidden>UPI app kholo</button>
+      <button id="cancel">Cancel</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <label>Debug log</label>
+    <pre id="log">—</pre>
+  </section>
+
+</main>
+
+<script>
+/* =====================================================================
+   GATEWAYS — yahan apne UPI gateway APIs add karne hain.
+   Har gateway me 2 functions chahiye:
+
+   createOrder({amount, orderId})  -> { upiUrl?, qrImage?, paymentUrl?, gatewayOrderId }
+   checkStatus(gatewayOrderId)     -> "pending" | "success" | "failed"
+
+   ⚠️ API keys/secret kabhi frontend me mat rakho. Apne backend
+   (jaise Firebase Cloud Function) se call karwao aur yahan sirf
+   us backend ka URL hit karo.
+   ===================================================================== */
+const AMOUNT = 1; // ₹1
+
+const GATEWAYS = {
+  demo: {
+    name: "Demo (simulated)",
+    async createOrder({amount, orderId}){
+      // Fake order: 8 sec baad success. Real gateway add hone par hata dena.
+      const upiUrl = `upi://pay?pa=test@upi&pn=Test&am=${amount}&cu=INR&tn=${orderId}`;
+      return { gatewayOrderId: orderId, upiUrl, startedAt: Date.now() };
+    },
+    async checkStatus(id, order){
+      return Date.now() - order.startedAt > 8000 ? "success" : "pending";
+    }
+  }
+
+  /* TEMPLATE — API milne par aise add hoga:
+  ,gatewayA: {
+    name: "Gateway A",
+    async createOrder({amount, orderId}){
+      const r = await fetch("https://YOUR-BACKEND/createOrder", {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({amount, orderId})
+      });
+      const d = await r.json();
+      return { gatewayOrderId: d.id, upiUrl: d.upi_url, qrImage: d.qr };
+    },
+    async checkStatus(id){
+      const r = await fetch("https://YOUR-BACKEND/status?id=" + encodeURIComponent(id));
+      const d = await r.json();
+      return d.status; // "pending" | "success" | "failed"
+    }
+  }
+  */
+};
+
+/* ---------------------------- UI logic ---------------------------- */
+const $ = id => document.getElementById(id);
+const gwSel = $("gw"), btn = $("upgrade"), pay = $("pay"), statusEl = $("status"),
+      qr = $("qr"), openBtn = $("open"), cancelBtn = $("cancel"), logEl = $("log");
+let timer = null, order = null, current = null;
+
+Object.entries(GATEWAYS).forEach(([k,g]) => gwSel.add(new Option(g.name, k)));
+
+function log(msg, data){
+  const t = new Date().toLocaleTimeString();
+  const line = `[${t}] ${msg}` + (data ? " " + JSON.stringify(data) : "");
+  logEl.textContent = logEl.textContent === "—" ? line : logEl.textContent + "\n" + line;
+  logEl.scrollTop = logEl.scrollHeight;
+}
+function setStatus(text, kind){ statusEl.textContent = text; statusEl.className = "status " + kind; }
+function stop(){ clearInterval(timer); timer = null; btn.disabled = false; }
+
+btn.addEventListener("click", async () => {
+  const gw = GATEWAYS[gwSel.value];
+  const orderId = "T" + Date.now();
+  btn.disabled = true;
+  pay.classList.add("show");
+  qr.hidden = true; openBtn.hidden = true;
+  setStatus("Order bana rahe hain…", "wait");
+  log("createOrder →", {gateway: gwSel.value, amount: AMOUNT, orderId});
+  try{
+    order = await gw.createOrder({amount: AMOUNT, orderId});
+    current = gw;
+    log("order ready", order);
+
+    if(order.qrImage){ qr.src = order.qrImage; qr.hidden = false; }
+    else if(order.upiUrl){
+      qr.src = "https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=" + encodeURIComponent(order.upiUrl);
+      qr.hidden = false;
+    }
+    if(order.upiUrl){ openBtn.hidden = false; openBtn.onclick = () => location.href = order.upiUrl; }
+    if(order.paymentUrl){ openBtn.hidden = false; openBtn.onclick = () => window.open(order.paymentUrl, "_blank"); }
+
+    setStatus("₹1 ka payment karo. Status check ho raha hai…", "wait");
+    let tries = 0;
+    timer = setInterval(async () => {
+      tries++;
+      try{
+        const s = await current.checkStatus(order.gatewayOrderId, order);
+        log("status:", {s, tries});
+        if(s === "success"){ stop(); setStatus("Payment ho gaya ✓ Pro plan active.", "ok"); }
+        else if(s === "failed"){ stop(); setStatus("Payment fail hua. Dobara try karo.", "err"); }
+        else if(tries >= 60){ stop(); setStatus("Timeout: 3 min me payment nahi mila.", "err"); }
+      }catch(e){ log("status error", {msg: String(e)}); }
+    }, 3000);
+  }catch(e){
+    stop(); setStatus("Order nahi bana: " + e.message, "err"); log("createOrder error", {msg: String(e)});
+  }
+});
+
+cancelBtn.addEventListener("click", () => {
+  stop(); pay.classList.remove("show"); log("cancelled");
+});
+</script>
+</body>
+</html>
