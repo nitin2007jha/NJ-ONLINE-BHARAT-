@@ -1,125 +1,223 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>NJ ONLINE BHARAT – ₹1 Upgrade</title>
+<title>NJ ONLINE BHARAT – ₹1 Test Store</title>
 <style>
-  :root{--bg:#eef3f1;--card:#fff;--ink:#14231f;--muted:#5d6f69;--line:#d3dfdb;--brand:#0b6e4f;--brand-ink:#fff;--ok:#0b6e4f;--err:#b3261e;--warn:#8a5a00}
-  @media (prefers-color-scheme:dark){:root{--bg:#0f1a17;--card:#16251f;--ink:#e6f1ed;--muted:#8fa59d;--line:#27403a;--brand:#3ecf9a;--brand-ink:#06251a;--ok:#3ecf9a;--err:#ff8a80;--warn:#ffcc66}}
+  :root{--bg:#f6f8f7;--card:#fff;--ink:#0f172a;--mute:#64748b;--brand:#0f766e;--line:#e2e8f0;--ok:#15803d;--bad:#b91c1c;--warn:#b45309}
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;justify-content:center;padding:24px 16px}
-  main{width:100%;max-width:440px;display:grid;gap:16px;align-content:start}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
-  h1{font-size:1.25rem;margin:0 0 4px}
-  .muted{color:var(--muted);font-size:.9rem}
-  .price{font-size:2.6rem;font-weight:700;letter-spacing:-.02em;margin:12px 0 4px}
-  .price small{font-size:1rem;font-weight:500;color:var(--muted)}
-  ul{padding-left:18px;margin:12px 0 18px}
-  button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--ink);padding:10px 14px}
-  button.primary{width:100%;background:var(--brand);color:var(--brand-ink);border-color:var(--brand);font-weight:600;padding:14px}
-  button:disabled{opacity:.6;cursor:not-allowed}
-  button:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
-  .status{border-radius:10px;padding:12px 14px;border:1px solid var(--line);margin-bottom:12px}
-  .status.ok{color:var(--ok);border-color:var(--ok)} .status.err{color:var(--err);border-color:var(--err)} .status.wait{color:var(--warn);border-color:var(--warn)}
-  dl{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:0 0 14px;font-size:.92rem}
-  dt{color:var(--muted)} dd{margin:0;word-break:break-all;font-family:ui-monospace,Menlo,monospace}
-  h2{font-size:1rem;margin:0 0 8px}
-  .hook{font-size:.82rem;font-family:ui-monospace,Menlo,monospace;border-top:1px solid var(--line);padding:8px 0;word-break:break-all}
-  .hook b.ok{color:var(--ok)} .hook b.err{color:var(--err)}
-  .hide{display:none}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+  header{padding:14px 18px;background:#fff;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+  header b{font-size:16px}
+  header span{font-size:12px;color:var(--mute)}
+  main{max-width:440px;margin:0 auto;padding:18px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:16px}
+  .hero{height:160px;border-radius:12px;background:linear-gradient(135deg,#0f766e,#134e4a);display:flex;align-items:center;justify-content:center;font-size:64px;margin-bottom:14px}
+  h1{font-size:20px;margin:0 0 4px}
+  p{margin:6px 0;color:var(--mute);font-size:14px}
+  .price{font-size:28px;font-weight:700;margin:10px 0}
+  .price small{font-size:13px;color:var(--mute);font-weight:400;text-decoration:line-through;margin-left:6px}
+  button{width:100%;padding:14px;border:0;border-radius:12px;background:var(--brand);color:#fff;font-size:16px;font-weight:600;cursor:pointer}
+  button:disabled{opacity:.6;cursor:wait}
+  button.alt{background:#0f172a}
+  button.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+  .msg{padding:12px;border-radius:12px;font-size:14px;margin-top:12px;word-break:break-word}
+  .ok{background:#f0fdf4;color:var(--ok);border:1px solid #bbf7d0}
+  .bad{background:#fef2f2;color:var(--bad);border:1px solid #fecaca}
+  .wait{background:#fffbeb;color:var(--warn);border:1px solid #fde68a}
+  .row{display:flex;justify-content:space-between;font-size:14px;padding:6px 0;border-bottom:1px dashed var(--line)}
+  .row:last-child{border:0}
+  .row span:first-child{color:var(--mute)}
+  .row span:last-child{font-family:ui-monospace,Menlo,monospace;text-align:right;word-break:break-all;margin-left:12px}
+  ul{padding-left:18px;color:var(--mute);font-size:14px;margin:8px 0}
+  .hidden{display:none}
+  footer{text-align:center;font-size:12px;color:var(--mute);padding:8px 18px 28px}
 </style>
 </head>
 <body>
+<header><b>NJ ONLINE BHARAT</b><span>UPI Gateway Test</span></header>
+
 <main>
-
-  <section class="card" id="vUpgrade">
-    <h1>Pro plan</h1>
-    <div class="muted">NJ ONLINE BHARAT</div>
-    <div class="price">₹1 <small>/ test payment</small></div>
+  <!-- PRODUCT VIEW -->
+  <section id="shop" class="card">
+    <div class="hero">📘</div>
+    <h1>UPI Payments Mini Guide</h1>
+    <p>Ek chhota digital guide (text file) — payment ke baad turant download milegi.</p>
     <ul>
-      <li>Hosted UPI checkout (UPI apps, QR, Collect)</li>
-      <li>Payment ke baad UTR verify hota hai</li>
+      <li>Payment: UPI app / QR / Collect</li>
+      <li>Zero-fee gateway test purchase</li>
+      <li>Verified by gateway before unlock</li>
     </ul>
-    <button class="primary" id="upgrade">Upgrade ₹1</button>
-    <div id="err" class="status err hide" style="margin:12px 0 0"></div>
+    <div class="price">₹1 <small>₹99</small></div>
+    <button id="buyBtn">Buy Now – Pay ₹1 via UPI</button>
+    <div id="shopMsg"></div>
   </section>
 
-  <section class="card hide" id="vConfirm" aria-live="polite">
-    <h1>Payment status</h1>
-    <div id="cStatus" class="status wait">Verify ho raha hai…</div>
-    <dl id="cInfo"></dl>
-    <button id="again">Dobara test karo</button>
-  </section>
-
-  <section class="card">
-    <h2>Webhook log</h2>
-    <div class="muted" id="hookEmpty">Abhi koi webhook nahi aaya.</div>
-    <div id="hooks"></div>
+  <!-- RESULT VIEW -->
+  <section id="result" class="card hidden">
+    <h1 id="resTitle">Checking payment…</h1>
+    <div id="resMsg"></div>
+    <div id="resRows" style="margin-top:10px"></div>
+    <div style="margin-top:14px;display:grid;gap:10px">
+      <button id="dlBtn" class="hidden">⬇ Download your product</button>
+      <button id="recheckBtn" class="ghost hidden">Check payment again</button>
+      <button id="backBtn" class="ghost">← Back to store</button>
+    </div>
   </section>
 </main>
 
+<footer>Test mode purchase · Product price ₹1 · Powered by NJ ONLINE BHARAT UPI Gateway</footer>
+
 <script>
-const $ = id => document.getElementById(id);
-const q = new URLSearchParams(location.search);
-
-/* ---------- Upgrade ---------- */
-$("upgrade").onclick = async () => {
-  const err = $("err"); err.classList.add("hide"); $("upgrade").disabled = true;
-  try{
-    const r = await fetch("/api/create-payment", {method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({orderId: "ORD-" + Date.now()})});
-    const d = await r.json();
-    if(!r.ok || !d.checkoutUrl) throw new Error(d.error ? d.error + (d.details ? " " + JSON.stringify(d.details) : "") : "HTTP " + r.status);
-    try{ sessionStorage.setItem("upi_session", d.sessionId); }catch(e){}
-    location.href = d.checkoutUrl;                     // gateway ka hosted UPI page
-  }catch(e){
-    err.textContent = "Payment start nahi hua: " + e.message; err.classList.remove("hide");
-    $("upgrade").disabled = false;
-  }
+/* ================= CONFIG ================= */
+const CONFIG = {
+  gatewayUrl: "https://upi-gateway-306595059779.us-west1.run.app",
+  // ⚠ TEST ONLY: static GitHub Pages site me key browser me visible hoti hai.
+  // Test ke baad gateway dashboard se "New Keys" karke key rotate kar do.
+  apiKey: "upi_live_569cddb208953d90",
+  productName: "UPI Payments Mini Guide",
+  amountInr: 1
 };
+// Payment ke baad gateway user ko yahin (GitHub Pages) wapas bhejega
+const CALLBACK_URL = location.origin + location.pathname;
+const STORE_KEY = "njob_pending_order";
 
-/* ---------- Confirmation (gateway yahin wapas bhejta hai) ---------- */
-function row(k, v){ if(!v) return; const dt = document.createElement("dt"), dd = document.createElement("dd");
-  dt.textContent = k; dd.textContent = v; $("cInfo").append(dt, dd); }
+/* ================= HELPERS ================= */
+const $ = id => document.getElementById(id);
+const show = id => $(id).classList.remove("hidden");
+const hide = id => $(id).classList.add("hidden");
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const box = (type, text) => `<div class="msg ${type}">${esc(text)}</div>`;
+const rows = obj => Object.entries(obj).filter(([,v]) => v).map(([k,v]) =>
+  `<div class="row"><span>${esc(k)}</span><span>${esc(v)}</span></div>`).join("");
 
-async function verify(){
-  $("vUpgrade").classList.add("hide"); $("vConfirm").classList.remove("hide");
-  let sessionId = q.get("sessionId"); try{ sessionId = sessionId || sessionStorage.getItem("upi_session"); }catch(e){}
-  const st = $("cStatus"); $("cInfo").innerHTML = "";
-  if(!sessionId){ st.className = "status err"; st.textContent = "Session ID nahi mila."; return; }
+function saveOrder(o){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(o)); }catch(e){} }
+function loadOrder(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY) || "null"); }catch(e){ return null; } }
+function clearOrder(){ try{ localStorage.removeItem(STORE_KEY); }catch(e){} }
+
+/* ================= STEP 1: CREATE SESSION + REDIRECT ================= */
+async function startPayment(){
+  const btn = $("buyBtn");
+  btn.disabled = true; btn.textContent = "Creating payment page…";
+  $("shopMsg").innerHTML = "";
+  const orderId = "ORD-" + Date.now();
   try{
-    const d = await (await fetch("/api/session/" + encodeURIComponent(sessionId))).json();
-    const s = d.session || {};
-    row("Order", s.orderId || q.get("orderId")); row("Amount", "₹" + (s.amountInr ?? q.get("amountInr")));
-    row("Session", sessionId);
-    if(s.status === "CONFIRMED"){
-      st.className = "status ok"; st.textContent = "Payment ho gaya ✓ Pro plan active.";
-      row("UTR", s.utr || q.get("utr"));
-      row("Webhook", d.webhook ? "mila ✓ (UTR " + d.webhook.utr + ")" : "abhi nahi aaya");
-    }else if(s.status === "FAILED"){ st.className = "status err"; st.textContent = "Payment fail hua."; }
-    else{ st.className = "status wait"; st.textContent = "Pending (" + (s.status || "unknown") + "). 5 sec me dobara check…"; setTimeout(verify, 5000); }
-  }catch(e){ st.className = "status err"; st.textContent = "Verify error: " + e.message; }
+    const res = await fetch(CONFIG.gatewayUrl + "/api/v1/checkout/sessions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + CONFIG.apiKey
+      },
+      body: JSON.stringify({
+        orderId,
+        amountInr: CONFIG.amountInr,
+        description: CONFIG.productName,
+        callbackUrl: CALLBACK_URL,
+        webhookUrl: CONFIG.gatewayUrl + "/api/demo-app/webhook"
+      })
+    });
+    const data = await res.json().catch(() => ({}));
+    if(!res.ok || !data.checkoutUrl){
+      throw new Error("Gateway error " + res.status + ": " + (data.error || data.message || JSON.stringify(data)));
+    }
+    saveOrder({ orderId, sessionId: data.session && data.session.id, amountInr: CONFIG.amountInr, createdAt: Date.now() });
+    location.href = data.checkoutUrl;   // hosted UPI checkout
+  }catch(err){
+    btn.disabled = false; btn.textContent = "Buy Now – Pay ₹1 via UPI";
+    let hint = "";
+    if(err instanceof TypeError) hint = " (Network/CORS error — gateway ne browser se call allow nahi ki ho sakti. Neeche wala note dekho.)";
+    $("shopMsg").innerHTML = box("bad", "Payment start nahi ho paya: " + err.message + hint);
+    console.error(err);
+  }
 }
-$("again").onclick = () => location.href = "/";
 
-/* ---------- Webhook log ---------- */
-async function loadHooks(){
-  try{
-    const {hooks} = await (await fetch("/api/webhook-log")).json();
-    $("hookEmpty").classList.toggle("hide", hooks.length > 0);
-    $("hooks").replaceChildren(...hooks.map(h => {
-      const d = document.createElement("div"); d.className = "hook";
-      const b = document.createElement("b"); b.className = h.valid ? "ok" : "err"; b.textContent = h.valid ? "VALID" : "REJECTED";
-      d.append(b, " " + new Date(h.at).toLocaleTimeString() + " · " + (h.event || "?") + " · " + (h.orderId || "-") +
-        (h.utr ? " · UTR " + h.utr : "") + (h.reason ? " · " + h.reason : ""));
-      return d;
-    }));
-  }catch(e){}
+/* ================= STEP 2: VERIFY ON RETURN ================= */
+async function verifyPayment(sessionId, orderId){
+  const res = await fetch(CONFIG.gatewayUrl + "/api/v1/checkout/sessions/" + encodeURIComponent(sessionId), {
+    headers: { "Authorization": "Bearer " + CONFIG.apiKey }
+  });
+  const data = await res.json().catch(() => ({}));
+  if(!res.ok) throw new Error("Verify failed " + res.status);
+  const s = data.session || {};
+  const status = String(s.status || "").toUpperCase();
+  const paid = (status === "CONFIRMED" || status === "CAPTURED");
+  const amountOk = Number(s.amountInr) === CONFIG.amountInr;
+  const orderOk = !orderId || !s.orderId || s.orderId === orderId;
+  return { paid: paid && amountOk && orderOk, status, session: s, amountOk, orderOk };
 }
-loadHooks(); setInterval(loadHooks, 5000);
 
-if(q.get("sessionId") || q.get("status")) verify();
+async function handleReturn(){
+  const q = new URLSearchParams(location.search);
+  const pending = loadOrder();
+  const sessionId = q.get("sessionId") || (pending && pending.sessionId);
+  if(!sessionId){ return false; }              // normal store visit
+  const orderId = q.get("orderId") || (pending && pending.orderId);
+
+  hide("shop"); show("result");
+  $("resTitle").textContent = "Checking payment…";
+  $("resMsg").innerHTML = box("wait", "Gateway se payment verify ho raha hai…");
+  hide("dlBtn"); hide("recheckBtn");
+
+  const run = async () => {
+    try{
+      const v = await verifyPayment(sessionId, orderId);
+      const info = { "Order ID": v.session.orderId || orderId, "Session": sessionId,
+                     "Amount": "₹" + (v.session.amountInr ?? ""), "Status": v.status, "Bank UTR": v.session.utr || q.get("utr") };
+      $("resRows").innerHTML = rows(info);
+      if(v.paid){
+        $("resTitle").textContent = "Payment successful ✅";
+        $("resMsg").innerHTML = box("ok", "₹1 receive ho gaya. Aapka product unlock ho gaya hai.");
+        show("dlBtn"); hide("recheckBtn");
+        $("dlBtn").onclick = () => downloadProduct(info);
+        clearOrder();
+      }else if(v.status === "FAILED"){
+        $("resTitle").textContent = "Payment failed ❌";
+        $("resMsg").innerHTML = box("bad", "Payment fail ho gaya. Dobara try karo.");
+        clearOrder();
+      }else{
+        $("resTitle").textContent = "Payment pending ⏳";
+        $("resMsg").innerHTML = box("wait", "Abhi payment confirm nahi hua (status: " + (v.status || "unknown") + "). Thodi der baad 'Check payment again' dabao.");
+        show("recheckBtn");
+      }
+    }catch(err){
+      $("resTitle").textContent = "Verification error";
+      $("resMsg").innerHTML = box("bad", err.message + (err instanceof TypeError ? " (CORS/network)" : ""));
+      show("recheckBtn");
+    }
+  };
+  $("recheckBtn").onclick = run;
+  await run();
+  return true;
+}
+
+/* ================= PRODUCT DELIVERY ================= */
+function downloadProduct(info){
+  const text =
+`UPI PAYMENTS MINI GUIDE
+=======================
+Purchased from NJ ONLINE BHARAT (test store)
+Order: ${info["Order ID"]}
+UTR  : ${info["Bank UTR"] || "-"}
+
+1. Hamesha API key server-side rakho, browser me nahi.
+2. Webhook signature (x-upi-signature) verify karo — timestamp 300s ke andar.
+3. Order status sirf gateway se verify hone ke baad PAID karo.
+4. UTR (12-digit) record karo reconciliation ke liye.
+5. Idempotent updates rakho: same payment.captured dobara aaye to double-process na ho.
+
+Thank you! 🙏
+`;
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([text], {type:"text/plain"}));
+  a.download = "UPI-Payments-Mini-Guide.txt";
+  document.body.appendChild(a); a.click(); a.remove();
+}
+
+/* ================= INIT ================= */
+$("buyBtn").addEventListener("click", startPayment);
+$("backBtn").addEventListener("click", () => { location.href = CALLBACK_URL; });
+handleReturn();
 </script>
 </body>
 </html>
