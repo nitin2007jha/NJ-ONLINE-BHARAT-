@@ -52,6 +52,13 @@
     <div class="price">₹1 <small>₹99</small></div>
     <button id="buyBtn">Buy Now – Pay ₹1 via UPI</button>
     <div id="shopMsg"></div>
+    <div id="pendingBox" class="msg wait hidden">
+      Pichla payment (<span id="pendingOrder"></span>) abhi complete nahi hua.
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+        <button id="pendingCheck" class="ghost" style="padding:10px;font-size:14px">Status check</button>
+        <button id="pendingDismiss" class="ghost" style="padding:10px;font-size:14px">Hatao</button>
+      </div>
+    </div>
   </section>
 
   <!-- RESULT VIEW -->
@@ -161,8 +168,18 @@ async function verifyPayment(sessionId, orderId){
 async function handleReturn(){
   const q = new URLSearchParams(location.search);
   const pending = loadOrder();
-  const sessionId = q.get("sessionId") || (pending && pending.sessionId);
-  if(!sessionId){ return false; }              // normal store visit
+  const sessionId = q.get("sessionId") || q.get("session_id");
+  if(!sessionId){                               // normal store visit / back button
+    if(pending && pending.sessionId){           // adhoora payment: sirf banner dikhao, page ko lock mat karo
+      $("pendingOrder").textContent = pending.orderId;
+      show("pendingBox");
+      $("pendingCheck").onclick = () => {
+        location.href = CALLBACK_URL + "?sessionId=" + encodeURIComponent(pending.sessionId) + "&orderId=" + encodeURIComponent(pending.orderId);
+      };
+      $("pendingDismiss").onclick = () => { clearOrder(); hide("pendingBox"); };
+    }
+    return false;
+  }
   const orderId = q.get("orderId") || (pending && pending.orderId);
 
   hide("shop"); show("result");
@@ -227,7 +244,7 @@ Thank you! 🙏
 
 /* ================= INIT ================= */
 $("buyBtn").addEventListener("click", startPayment);
-$("backBtn").addEventListener("click", () => { location.href = CALLBACK_URL; });
+$("backBtn").addEventListener("click", () => { location.replace(CALLBACK_URL); });
 handleReturn();
 </script>
 </body>
