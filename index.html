@@ -165,19 +165,37 @@ async function verifyPayment(sessionId, orderId){
   return { paid: paid && amountOk && orderOk, status, session: s, amountOk, orderOk };
 }
 
+/* Back button / adhoora payment: chupchap status check karke sahi UI dikhao */
+async function checkPending(){
+  const pending = loadOrder();
+  hide("pendingBox");
+  if(!pending || !pending.sessionId) return;
+  try{
+    const v = await verifyPayment(pending.sessionId, pending.orderId);
+    if(v.paid){                                   // payment ho chuka tha -> result page par unlock
+      location.replace(CALLBACK_URL + "?sessionId=" + encodeURIComponent(pending.sessionId) + "&orderId=" + encodeURIComponent(pending.orderId));
+      return;
+    }
+    if(v.status === "FAILED"){                    // decline / fail
+      clearOrder();
+      $("shopMsg").innerHTML = box("bad", "Payment fail/decline hua (" + pending.orderId + "). Koi paisa nahi kata. Dobara try karo.");
+      return;
+    }
+  }catch(e){ /* network issue: neeche banner dikhao */ }
+  $("pendingOrder").textContent = pending.orderId;
+  show("pendingBox");
+  $("pendingCheck").onclick = () => {
+    location.href = CALLBACK_URL + "?sessionId=" + encodeURIComponent(pending.sessionId) + "&orderId=" + encodeURIComponent(pending.orderId);
+  };
+  $("pendingDismiss").onclick = () => { clearOrder(); hide("pendingBox"); };
+}
+
 async function handleReturn(){
   const q = new URLSearchParams(location.search);
   const pending = loadOrder();
   const sessionId = q.get("sessionId") || q.get("session_id");
   if(!sessionId){                               // normal store visit / back button
-    if(pending && pending.sessionId){           // adhoora payment: sirf banner dikhao, page ko lock mat karo
-      $("pendingOrder").textContent = pending.orderId;
-      show("pendingBox");
-      $("pendingCheck").onclick = () => {
-        location.href = CALLBACK_URL + "?sessionId=" + encodeURIComponent(pending.sessionId) + "&orderId=" + encodeURIComponent(pending.orderId);
-      };
-      $("pendingDismiss").onclick = () => { clearOrder(); hide("pendingBox"); };
-    }
+    checkPending();
     return false;
   }
   const orderId = q.get("orderId") || (pending && pending.orderId);
@@ -237,7 +255,7 @@ UTR  : ${info["Bank UTR"] || "-"}
 Thank you! 🙏
 `;
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([text], {type:"text/plain"}));
+  a.href = "data:text/plain;charset=utf-8," + encodeURIComponent(text);
   a.download = "UPI-Payments-Mini-Guide.txt";
   document.body.appendChild(a); a.click(); a.remove();
 }
@@ -246,6 +264,12 @@ Thank you! 🙏
 $("buyBtn").addEventListener("click", startPayment);
 $("backBtn").addEventListener("click", () => { location.replace(CALLBACK_URL); });
 handleReturn();
+window.addEventListener("pageshow", e => {      // browser Back se aane par button reset
+  if(e.persisted && !new URLSearchParams(location.search).get("sessionId")){
+    const b = $("buyBtn"); b.disabled = false; b.textContent = "Buy Now – Pay ₹1 via UPI";
+    show("shop"); hide("result"); checkPending();
+  }
+});
 </script>
 </body>
 </html>
